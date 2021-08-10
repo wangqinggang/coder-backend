@@ -1,4 +1,6 @@
-FROM java:8
+FROM openjdk:11-jdk-oracle
+EXPOSE 8888
 VOLUME /tmp
-ADD *.jar app.jar
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+COPY target/coder-0.0.1-SNAPSHOT.jar /app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+# docker build -t ideaworks/coder-backend:v1.0 .

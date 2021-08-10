@@ -5,6 +5,7 @@ import java.util.List;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 前端传递到后端的值
@@ -12,6 +13,7 @@ import lombok.Data;
  * @version 1.0.0
 */
 @Data
+@Accessors(chain = true)
 @ApiModel("创建领域对象实体信息")
 public class EntityDTO {
 
@@ -28,6 +30,6 @@ public class EntityDTO {
 	private String apiTag; 
 	
 	@ApiModelProperty("实体包含的属性列表")
-	private List<EntityField> entityFeilds;
+	private List<EntityField> entityFields;
 }
 

@@ -67,7 +67,7 @@ public class InterfaceBuilderFactory
 			typeSpecBuilder = TypeSpec.interfaceBuilder((interfaceName).trim())
 										.addModifiers(Modifier.PUBLIC);
 		}		
-		typeSpecBuilder.addJavadoc("@Author: ItzMee and \n@Author: Rajib Garai \n@BuiltWith: JavaPoet\n");
+		typeSpecBuilder.addJavadoc("@Author: William \n@BuiltWith: JavaPoet\n");
 		return typeSpecBuilder.build();
 	}
 
@@ -101,7 +101,7 @@ public class InterfaceBuilderFactory
 										.addAnnotations(annotations)
 										.addSuperinterface(jpaRepository);
 		}
-		typeSpecBuilder.addJavadoc("@Author: ItzMee and \n@Author: Rajib Garai \n@BuiltWith: JavaPoet\n");
+		typeSpecBuilder.addJavadoc("@Author: William \n@BuiltWith: JavaPoet\n");
 		return typeSpecBuilder.build();
 	}
 }

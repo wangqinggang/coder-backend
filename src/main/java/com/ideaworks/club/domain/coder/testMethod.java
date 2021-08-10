@@ -99,7 +99,7 @@ public class testMethod {
 				.addAnnotation(classParam)
 				.build();
 		
-		JavaFile javaFile = JavaFile.builder("com.hascode.tutorial", bookService).build();
+		JavaFile javaFile = JavaFile.builder("www.ideaworks.club", bookService).build();
 		javaFile.writeTo(System.out);
 		
 //		JavaFile javaFile = JavaFile.builder("com.hascode.tutorial", numberUtil).build();

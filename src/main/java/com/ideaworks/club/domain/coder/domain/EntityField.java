@@ -2,17 +2,19 @@ package com.ideaworks.club.domain.coder.domain;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 实体属性列表
- * @author 王庆港
+ * @author william
  * @version 1.0.0
 */
 @Data
+@Accessors(chain = true)
 public class EntityField {
 
 	@ApiModelProperty("属性数据类型")
-	private String dateType;
+	private String dataType;
 	
 	@ApiModelProperty("属性名称")
 	private String fieldName; 

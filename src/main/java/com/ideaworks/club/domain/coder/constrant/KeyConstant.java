@@ -4,7 +4,7 @@ public class KeyConstant
 {		
 //----------------------------------------------------------------------GENERATED PROJECT LOCATION CONSTANT-----------
 	
-	public static String GENERATED_PROJECT_LOCATION ="D:/code";
+	public static String GENERATED_PROJECT_LOCATION ="/code";
 	
 //----------------------------------------------------------------------DATA BASE DATA TYPE CONSTANT-------------------
 	
