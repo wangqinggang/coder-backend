@@ -13,6 +13,8 @@ import javax.persistence.Table;
 
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
@@ -557,6 +559,7 @@ public class SCGServiceImpl implements SCGService {
         // Page<CasesSdjg> getPage(CasesSdjgCondition condition, Pageable pageable);
 
         ClassName listPage = ClassName.get("org.springframework.data.domain", "Page");
+
         ClassName condition = ClassName.get("www.ideaworks.club.form", entityName + "DTO");
         ClassName pageable = ClassName.get("org.springframework.data.domain", "Pageable");
 
@@ -705,6 +708,8 @@ public class SCGServiceImpl implements SCGService {
         String comment = entityDTO.getComment(); // Entity 说明 ApiModel 注解用
         String apiTag = entityDTO.getApiTag(); // Controller 接口说明 API（tags） 注解用
 
+
+
         // 实体类的类名
         ClassName modelClass = ClassName.get(("www.ideaworks.club.domain").trim(), entityName);
 
@@ -737,17 +742,17 @@ public class SCGServiceImpl implements SCGService {
         saveMethodAnnotationSpecs.add(saveapiAnnotationSpec);
 
         List<ParameterSpec> saveMethodParameters = new ArrayList<>();
-        saveMethodParameters.add(ParameterSpec.builder(modelClass, entityName.toLowerCase())
+        saveMethodParameters.add(ParameterSpec.builder(DTOClass, entityName.toLowerCase()+"DTO")
                 .addAnnotation(AnnotationSpec.builder(RequestBody.class).build()).build());
 
-        MethodSpec saveMethodSpec = MethodBuilderFactory.build(saveMethodAnnotationSpecs, modifiers, modelClass,
+        MethodSpec saveMethodSpec = MethodBuilderFactory.build(saveMethodAnnotationSpecs, modifiers, DTOClass,
                 ("save" + entityName).trim(), saveMethodParameters);
 
         methods.add(
                 saveMethodSpec.toBuilder()
                         .addStatement(("return " + (entityName.toLowerCase())
                                 + "Service" + "." + "save" + entityName
-                                + "(" + entityName.toLowerCase()
+                                + "(" + entityName.toLowerCase()+"DTO"
                                 + ")").trim())
                         .build());
 
@@ -762,13 +767,14 @@ public class SCGServiceImpl implements SCGService {
 
         ClassName list = ClassName.get("java.util", "List");
         TypeName modelClasses = ParameterizedTypeName.get(list, modelClass);
+        TypeName DTOClasses = ParameterizedTypeName.get(list, DTOClass);
 
-        MethodSpec getMethodSpec = MethodBuilderFactory.build(getAllMethodAnnotationSpecs, modifiers, modelClasses,
+        MethodSpec getMethodSpec = MethodBuilderFactory.build(getAllMethodAnnotationSpecs, modifiers, DTOClasses,
                 ("get" + entityName + "s").trim(), null);
 
         methods.add(getMethodSpec.toBuilder().addStatement(
                 ("return " + (entityName.toLowerCase()) + "Service"
-                        + ("." + "get" + entityName + "s" + "(")
+                        + ("." + "getAll" + entityName + "s" + "(")
                         + ")").trim())
                 .build());
 
@@ -791,14 +797,14 @@ public class SCGServiceImpl implements SCGService {
                                         "\"" + columnEntityField.getFieldName() + "\"").build())
                         .build());
 
-        MethodSpec getByIdMethodSpec = MethodBuilderFactory.build(getMethodAnnotationSpecs, modifiers, modelClass,
+        MethodSpec getByIdMethodSpec = MethodBuilderFactory.build(getMethodAnnotationSpecs, modifiers, DTOClass,
                 ("get" + entityName).trim(), getMethodParameters);
 
         methods.add(
                 getByIdMethodSpec.toBuilder()
                         .addStatement(("return " + (entityName.toLowerCase())
                                 + "Service" + "." + "get" + entityName
-                                + "(" + columnEntityField.getFieldName()
+                                + "ById(" + columnEntityField.getFieldName()
                                 + ")").trim())
                         .build());
 
@@ -810,7 +816,7 @@ public class SCGServiceImpl implements SCGService {
 
         List<ParameterSpec> updateMethodParameters = new ArrayList<>();
 
-        updateMethodParameters.add(ParameterSpec.builder(modelClass, entityName.toLowerCase())
+        updateMethodParameters.add(ParameterSpec.builder(DTOClass, entityName.toLowerCase()+"DTO")
                 .addAnnotation(AnnotationSpec.builder(RequestBody.class).build()).build());
 
         updateMethodParameters
@@ -822,13 +828,13 @@ public class SCGServiceImpl implements SCGService {
                                         "\"" + columnEntityField.getFieldName() + "\"").build())
                         .build());
 
-        MethodSpec updateMethodSpec = MethodBuilderFactory.build(updateMethodAnnotationSpecs, modifiers, modelClass,
+        MethodSpec updateMethodSpec = MethodBuilderFactory.build(updateMethodAnnotationSpecs, modifiers, DTOClass,
                 ("update" + entityName).trim(), updateMethodParameters);
 
         methods.add(updateMethodSpec.toBuilder()
                 .addStatement(("return " + (entityName.toLowerCase())
                         + "Service" + "." + "update" + entityName
-                        + "(" + entityName.toLowerCase() + ", "
+                        + "ById(" + entityName.toLowerCase() + "DTO , "
                         + columnEntityField.getFieldName() + ")").trim())
                 .build());
 
@@ -854,9 +860,63 @@ public class SCGServiceImpl implements SCGService {
 
         methods.add(deleteMethodSpec.toBuilder()
                 .addStatement(((entityName.toLowerCase()) + "Service" + "."
-                        + "delete" + entityName + "("
+                        + "delete" + entityName + "ById("
                         + columnEntityField.getFieldName() + ")").trim())
                 .build());
+
+        // ---------------- isExist --------------
+        List<AnnotationSpec> isExistMethodAnnotationSpecs = new ArrayList<>();
+        isExistMethodAnnotationSpecs.add(AnnotationSpec.builder(GetMapping.class)
+                .addMember("value", "\"/" + "isExist{id}" + "\"").build());
+
+        List<ParameterSpec> isExistMethodParameters = new ArrayList<>();
+
+        isExistMethodParameters
+                .add(ParameterSpec
+                        .builder(SCGServiceImpl.getFieldType(columnEntityField.getDataType()),
+                                columnEntityField.getFieldName().toLowerCase())
+                        .addAnnotation(
+                                AnnotationSpec.builder(PathVariable.class).addMember("value",
+                                        "\"" + columnEntityField.getFieldName() + "\"").build())
+                        .build());
+
+        MethodSpec isExistMethodSpec = MethodBuilderFactory.build(isExistMethodAnnotationSpecs, modifiers, Boolean.class,
+                ("isExist" + entityName).trim(), isExistMethodParameters);
+
+        methods.add(isExistMethodSpec.toBuilder()
+                .addStatement(("return "+(entityName.toLowerCase()) + "Service" + "."
+                        + "is" + entityName + "Exist("
+                        + columnEntityField.getFieldName() + ")").trim())
+                .build());
+
+        //------------------ getConditionPage
+        List<AnnotationSpec> getConditionPageMethodAnnotationSpecs = new ArrayList<>();
+        getConditionPageMethodAnnotationSpecs.add(AnnotationSpec.builder(GetMapping.class)
+                .addMember("value", "\"/" + "getPageList" + "\"").build());
+
+        List<ParameterSpec> getConditionPageMethodParameters = new ArrayList<>();
+
+        getConditionPageMethodParameters
+                .add(ParameterSpec.builder(DTOClass,entityName.toLowerCase()+"DTO").build());
+//                        .addAnnotation(
+//                                AnnotationSpec.builder(PathVariable.class).addMember("value",
+//                                        "\"" + columnEntityField.getFieldName() + "\"").build())
+        getConditionPageMethodParameters
+                .add(ParameterSpec.builder(Pageable.class,"pageable").build());
+
+        ClassName listPage = ClassName.get("org.springframework.data.domain", "Page");
+        TypeName PageClassesDTO = ParameterizedTypeName.get(listPage, DTOClass);
+
+        MethodSpec getConditionPageMethodSpec = MethodBuilderFactory.build(getConditionPageMethodAnnotationSpecs, modifiers, PageClassesDTO,
+                ("getPageByCondition").trim(), getConditionPageMethodParameters);
+
+        methods.add(getConditionPageMethodSpec.toBuilder()
+                .addStatement(("return "+(entityName.toLowerCase()) + "Service" + "."
+                        + "getPageByCondition("
+                        + entityName.toLowerCase() + "DTO ,pageable)").trim())
+                .build());
+
+
 
         // ----------------CONTROLLER CLASS CREATION----------------------
 
@@ -880,11 +940,13 @@ public class SCGServiceImpl implements SCGService {
 //                ("www.ideaworks.club.controller").trim(),
 //                classTypeSpec);
 
-        TypeSpec serviceImplTypeSpec = TypeSpec.classBuilder(entityName + "ServiceImpl").addModifiers(Modifier.PUBLIC)
-                .addMethods(methods).addAnnotations(classAnnotations).addFields(fields)
-                .addSuperinterface(serviceInterface).build();
+        TypeSpec serviceImplTypeSpec = TypeSpec.classBuilder(entityName + "Controller").addModifiers(Modifier.PUBLIC)
+                .addMethods(methods)
+                .addAnnotations(classAnnotations)
+                .addFields(fields)
+                .build();
 
-        JavaFile javaFile = JavaFile.builder("www.ideaworks.club.serviceImpl", serviceImplTypeSpec).build();
+        JavaFile javaFile = JavaFile.builder("www.ideaworks.club.controller", serviceImplTypeSpec).build();
         return javaFile.toString();
     }
 
