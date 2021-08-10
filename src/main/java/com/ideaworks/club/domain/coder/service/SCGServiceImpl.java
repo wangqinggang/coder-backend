@@ -246,7 +246,7 @@ public class SCGServiceImpl implements SCGService {
 
         ClassName jpaClassName = ClassName.get("org.springframework.data.jpa.repository", "JpaRepository");
         ClassName PageingClassName = ClassName.get("org.springframework.data.repository", "PagingAndSortingRepository");
-        ClassName JpaSpecificationExecutor = ClassName.get("org.springframework.data.repository", "PagingAndSortingRepository");
+        ClassName JpaSpecificationExecutor = ClassName.get("org.springframework.data.repository", "JpaSpecificationExecutor");
 
         TypeSpec repositorySpec = TypeSpec.interfaceBuilder(entityName + "Repository").addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(ParameterizedTypeName.get(jpaClassName,
@@ -279,7 +279,7 @@ public class SCGServiceImpl implements SCGService {
 
         // 实体类的类名
         ClassName modelClass = ClassName.get(("www.ideaworks.club.domain").trim(), entityName);
-        ClassName DTOClass = ClassName.get(("www.ideaworks.club.dto").trim(), entityName+"DTO");
+        ClassName DTOClass = ClassName.get(("www.ideaworks.club.dto").trim(), entityName + "DTO");
         // 实体的属性列表
         List<EntityField> columns = entityDTO.getEntityFields();
 
@@ -337,7 +337,7 @@ public class SCGServiceImpl implements SCGService {
         List<ParameterSpec> updateMethodParameters = new ArrayList<>();
 
         // 要更新的新实体
-        updateMethodParameters.add(ParameterSpec.builder(DTOClass, entityName.toLowerCase()+"DTO").build());
+        updateMethodParameters.add(ParameterSpec.builder(DTOClass, entityName.toLowerCase() + "DTO").build());
 
         // 要更新的实体名
         updateMethodParameters.add(ParameterSpec.builder(SCGServiceImpl.getFieldType(columnEntityField.getDataType()),
@@ -455,9 +455,9 @@ public class SCGServiceImpl implements SCGService {
 
         MethodSpec saveMethodSpec = MethodSpec.methodBuilder("save" + entityName).addModifiers(modifiers)
                 .returns(DTOClass)
-                .addStatement("final $T " + entityName.toLowerCase() + " = new $T()",modelClass,modelClass)
-                .addStatement("mapToEntity("+ entityName.toLowerCase()+"DTO,"+entityName.toLowerCase()+")")
-                .addStatement("return mapToDTO("+entityName.toLowerCase() + "Repository" + ".save(" + entityName.toLowerCase()+")","new "+entityName+"DTO())")
+                .addStatement("final $T " + entityName.toLowerCase() + " = new $T()", modelClass, modelClass)
+                .addStatement("mapToEntity(" + entityName.toLowerCase() + "DTO," + entityName.toLowerCase() + ")")
+                .addStatement("return mapToDTO(" + entityName.toLowerCase() + "Repository" + ".save(" + entityName.toLowerCase() + ")", "new " + entityName + "DTO())")
                 .addParameters(saveMethodParameters).build();
 
         methods.add(saveMethodSpec);
@@ -491,11 +491,11 @@ public class SCGServiceImpl implements SCGService {
                         "get" + entityName + "By" + columnEntityField.getFieldName().substring(0, 1).toUpperCase()
                                 + columnEntityField.getFieldName().substring(1))
                 .addModifiers(modifiers)
-                .addStatement("$T "+entityName.toLowerCase()+"DTO = new $T()",DTOClass,DTOClass)
+//                .addStatement("$T " + entityName.toLowerCase() + "DTO = new $T()", DTOClass, DTOClass)
                 .addStatement("return " + entityName.toLowerCase() + "Repository" + ".findById("
                         + columnEntityField.getFieldName().toLowerCase() + ")\n.map(" + entityName.toLowerCase()
-                        + " -> " + "mapToDTO("+entityName.toLowerCase()+",new " + entityName + "DTO()))\n"
-                        + ".orElse(new "+entityName+"DTO())")
+                        + " -> " + "mapToDTO(" + entityName.toLowerCase() + ",new " + entityName + "DTO()))\n"
+                        + ".orElse(new " + entityName + "DTO())")
                 .returns(DTOClass).addParameters(getMethodParameters).build();
 
         methods.add(GetByIdMethodSpec);
@@ -515,10 +515,10 @@ public class SCGServiceImpl implements SCGService {
                         "update" + entityName + "By" + columnEntityField.getFieldName().substring(0, 1).toUpperCase()
                                 + columnEntityField.getFieldName().substring(1))
                 .addModifiers(modifiers)
-                .addStatement("final $T" + entityName.toLowerCase() + " = " + entityName.toLowerCase()
-                        + "Repository" + ".findById(" + columnEntityField.getFieldName().toLowerCase() + ").orElse(new "+entityName+"())",modelClass)
-                .addStatement("mapToEntity(" + entityName.toLowerCase()+"DTO,"+entityName.toLowerCase()+")")
-                .addStatement("return "+ "mapToDTO("+entityName.toLowerCase()+"Repository.save("+ entityName.toLowerCase()+"),new "+entityName+"DTO())")
+                .addStatement("final $T " + entityName.toLowerCase() + " = " + entityName.toLowerCase()
+                        + "Repository" + ".findById(" + columnEntityField.getFieldName().toLowerCase() + ").orElse(new " + entityName + "())", modelClass)
+                .addStatement("mapToEntity(" + entityName.toLowerCase() + "DTO," + entityName.toLowerCase() + ")")
+                .addStatement("return " + "mapToDTO(" + entityName.toLowerCase() + "Repository.save(" + entityName.toLowerCase() + "),new " + entityName + "DTO())")
                 .returns(DTOClass).addParameters(updateMethodParameters).build();
 
         methods.add(UpdateByIdMethodSpec);
@@ -547,7 +547,7 @@ public class SCGServiceImpl implements SCGService {
                 columnEntityField.getFieldName().toLowerCase()).addModifiers(Modifier.FINAL).build());
 
         MethodSpec isExitMethodSpec = MethodSpec.methodBuilder("is" + entityName + "Exist").addModifiers(modifiers)
-                .addStatement("return "+entityName.toLowerCase() + "Repository" + ".existsById("
+                .addStatement("return " + entityName.toLowerCase() + "Repository" + ".existsById("
                         + columnEntityField.getFieldName().toLowerCase() + ")")
                 .returns(Boolean.class).addParameters(isExitMethodParameters).build();
 
@@ -562,16 +562,20 @@ public class SCGServiceImpl implements SCGService {
 
         List<ParameterSpec> getPageMethodParameters = new ArrayList<>();
 
-        TypeName PageClasses = ParameterizedTypeName.get(listPage, DTOClass);
+        TypeName PageClassesDTO = ParameterizedTypeName.get(listPage, DTOClass);
+//        TypeName PageClasses = ParameterizedTypeName.get(listPage, modelClass);
 
         getPageMethodParameters.add(ParameterSpec.builder(condition, (entityName.toLowerCase() + "DTO"))
                 .addModifiers(Modifier.FINAL).build());
         getPageMethodParameters.add(ParameterSpec.builder(pageable, "pageable").addModifiers(Modifier.FINAL).build());
 
         MethodSpec ConditionPageMethodSpec = MethodSpec.methodBuilder("getPageByCondition").addModifiers(modifiers)
-                .addStatement(entityName.toLowerCase() + "Repository" + ".findAll( this.createSpecification("
-                        + entityName.toLowerCase() + "DTO" + "),pageable)")
-                .addParameters(getPageMethodParameters).returns(PageClasses).build();
+                .addStatement("return " + entityName.toLowerCase() + "Repository" + ".findAll( this.createSpecification("
+                        + entityName.toLowerCase() + "DTO" + "),pageable)\n.map(" + entityName.toLowerCase() + " -> { \n"
+                        + entityName + "DTO " + entityName.toLowerCase() + "DTO1 = new " + entityName  + "DTO();\n"
+                        + "return mapToDTO(" + entityName.toLowerCase() + "," + entityName.toLowerCase() + "DTO1 );\n"
+                        + "})")
+                .addParameters(getPageMethodParameters).returns(PageClassesDTO).build();
 
         methods.add(ConditionPageMethodSpec);
 
@@ -579,23 +583,23 @@ public class SCGServiceImpl implements SCGService {
         ClassName specificatioName = ClassName.get("org.springframework.data.jpa.domain", "Specification");
         ClassName predicateName = ClassName.get("javax.persistence.criteria", "Predicate");
 
-        TypeName specificatioCondition = ParameterizedTypeName.get(specificatioName, DTOClass);
+        TypeName specificatioCondition = ParameterizedTypeName.get(specificatioName, modelClass);
 
         StringBuilder codeBlockString = new StringBuilder();
         for (EntityField column : columns) {
             String typeString = column.getDataType();
             if (typeString.equals("String")) {
                 codeBlockString.append("if(!StringUtils.isEmpty(")
-                        .append(entityName.toLowerCase()+"DTO.get"+column.getFieldName().substring(0,1).toUpperCase()+column.getFieldName().substring(1)+"()")
+                        .append(entityName.toLowerCase() + "DTO.get" + column.getFieldName().substring(0, 1).toUpperCase() + column.getFieldName().substring(1) + "()")
                         .append(")){\n").append("\tPredicate predicate = criteriaBuilder.equal(root.get(\"")
                         .append(column.getFieldName())
                         .append("\"),")
-                        .append(entityName.toLowerCase()+"DTO.get"+column.getFieldName().substring(0,1).toUpperCase()+column.getFieldName().substring(1)+"()")
+                        .append(entityName.toLowerCase() + "DTO.get" + column.getFieldName().substring(0, 1).toUpperCase() + column.getFieldName().substring(1) + "()")
                         .append("); \n").append("\tpredicates.add(predicate);\n}\n");
             } else {
-                codeBlockString.append("if("+entityName.toLowerCase()+"DTO.get"+column.getFieldName().substring(0,1).toUpperCase()+column.getFieldName().substring(1)+"()"+"!=null){\n" + "\tPredicate predicate = criteriaBuilder.equal(root.get(\"")
+                codeBlockString.append("if(" + entityName.toLowerCase() + "DTO.get" + column.getFieldName().substring(0, 1).toUpperCase() + column.getFieldName().substring(1) + "()" + "!=null){\n" + "\tPredicate predicate = criteriaBuilder.equal(root.get(\"")
                         .append(column.getFieldName()).append("\"),")
-                        .append(entityName.toLowerCase()+"DTO.get"+column.getFieldName().substring(0,1).toUpperCase()+column.getFieldName().substring(1)+"()")
+                        .append(entityName.toLowerCase() + "DTO.get" + column.getFieldName().substring(0, 1).toUpperCase() + column.getFieldName().substring(1) + "()")
                         .append("); \n")
                         .append("\tpredicates.add(predicate);\n}\n");
             }
@@ -604,11 +608,11 @@ public class SCGServiceImpl implements SCGService {
         MethodSpec specificationMethodSpec = MethodSpec.methodBuilder("createSpecification").addModifiers(modifiers)
                 .addStatement(
                         "return (root,query,criteriaBuilder) -> {\n" + "List<$T> predicates = new ArrayList<$T>();\n"
-                                + "if(!StringUtils.isEmpty(" + entityName.toLowerCase()+"DTO.get"
-                                + columnEntityField.getFieldName().substring(0,1).toUpperCase()+columnEntityField.getFieldName().substring(1) + "())){ \n"
+                                + "if(!StringUtils.isEmpty(" + entityName.toLowerCase() + "DTO.get"
+                                + columnEntityField.getFieldName().substring(0, 1).toUpperCase() + columnEntityField.getFieldName().substring(1) + "())){ \n"
                                 + "\t$T predicate = criteriaBuilder.equal(root.get(\"" + columnEntityField.getFieldName() + "\"),"
-                                + entityName.toLowerCase()+"DTO.get"+columnEntityField.getFieldName().substring(0,1).toUpperCase()
-                                +columnEntityField.getFieldName().substring(1)+"()"
+                                + entityName.toLowerCase() + "DTO.get" + columnEntityField.getFieldName().substring(0, 1).toUpperCase()
+                                + columnEntityField.getFieldName().substring(1) + "()"
                                 + "); \n" + "\tpredicates.add(predicate);\n" + "}\n"
                                 + codeBlockString
                                 + "return query.where(predicates.toArray(new Predicate[predicates.size()])).getRestriction();"
@@ -637,7 +641,7 @@ public class SCGServiceImpl implements SCGService {
                 .addStatement(
                         "$T.copyProperties(" + entityName.toLowerCase() + "DTO" + "," + entityName.toLowerCase() + ")",
                         BeanUtilsName)
-                .addStatement("return "+entityName.toLowerCase())
+                .addStatement("return " + entityName.toLowerCase())
                 .returns(modelClass)
                 .addParameter(ParameterSpec.builder(DTOClass, entityName.toLowerCase() + "DTO")
                         .addModifiers(Modifier.FINAL).build())
@@ -650,7 +654,7 @@ public class SCGServiceImpl implements SCGService {
         MethodSpec mapToDTOMethodSpec = MethodSpec.methodBuilder("mapToDTO").addModifiers(modifiers)
                 .addStatement("$T.copyProperties(" + entityName.toLowerCase() + "," + entityName.toLowerCase() + "DTO)",
                         BeanUtilsName)
-                .addStatement("return "+entityName.toLowerCase() + "DTO")
+                .addStatement("return " + entityName.toLowerCase() + "DTO")
                 .returns(DTOClass)
                 .addParameter(
                         ParameterSpec.builder(modelClass, entityName.toLowerCase()).addModifiers(Modifier.FINAL).build())
